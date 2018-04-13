@@ -273,6 +273,13 @@ cdef class LBFGS(object):
         def __set__(self, algorithm):
             self.params.linesearch = _LINE_SEARCH_ALGO[algorithm]
 
+    property max_linesearch:
+        def __get__(self) :
+            return self.params.max_linesearch
+
+        def __set__(self, int val):
+            self.params.max_linesearch = val
+
     property min_step:
         def __get__(self) :
             return self.params.min_step

@@ -25,12 +25,11 @@ Hacking
 Type::
 
     pip install -r requirements.txt
-    cython lbfgs/_lowlevel.pyx
     python setup.py build_ext -i
 
 to build PyLBFGS in-place, i.e. without installing it.
 
-To run the test suite, make sure you have pytest_ installed, and type::
+To run the test suite, make sure you have pytest_ or nosetests_ installed, and type::
 
     pytest tests
 
@@ -53,3 +52,5 @@ Alexis Mignon submitted a patch for error handling.
 .. _SciPy: http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html
 
 .. _setuptools: http://pypi.python.org/pypi/setuptools
+
+.. _nosetests: http://nose.readthedocs.io
