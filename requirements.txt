@@ -1,4 +1,2 @@
 numpy
 cython
-pytest
-pytest-cov
