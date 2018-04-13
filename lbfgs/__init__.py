@@ -61,10 +61,10 @@ def fmin_lbfgs(f, x0, progress=None, args=(), orthantwise_c=0,
         variables, x_1, ..., x_{b-1} (e.g., a bias term of logistic
         regression) from being regularized. The default value is zero.
 
-    orthantwise_end: int, optional (default=len(x0))
+    orthantwise_end: int, optional (default=-1)
         End index for computing L1 norm of the variables.
         This parameter is valid only for OWL-QN method
-        (i.e., \ref orthantwise_c != 0). This parameter e (0 < e <= N)
+        (i.e., orthantwise_c != 0). This parameter e (0 < e <= N)
         specifies the index number at which the library stops computing the
         L1 norm of the variables x,
 
@@ -171,7 +171,7 @@ def fmin_lbfgs(f, x0, progress=None, args=(), orthantwise_c=0,
     opt = LBFGS()
     opt.orthantwise_c = orthantwise_c
     opt.orthantwise_start = orthantwise_start
-    opt.orthantwise_end = orthantwise_end if orthantwise_end > 0 else len(x0)
+    opt.orthantwise_end = orthantwise_end
     opt.m = m
     opt.epsilon = epsilon
     opt.past = past
