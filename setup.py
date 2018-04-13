@@ -3,6 +3,8 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.ccompiler import get_default_compiler
+from Cython.Build import cythonize
+
 
 class custom_build_ext(build_ext):
     def finalize_options(self):
@@ -53,9 +55,9 @@ setup(
     author_email="fgregg@gmail.com",
     packages=['lbfgs'],
     install_requires=['numpy>=1.12.1'],
-    ext_modules=[NumpyExtension('lbfgs._lowlevel', 
-                                ['lbfgs/_lowlevel.c', 'liblbfgs/lbfgs.c'],
-                                include_dirs=include_dirs)],
+    ext_modules=cythonize([NumpyExtension('lbfgs._lowlevel',
+                                ['lbfgs/_lowlevel.pyx', 'liblbfgs/lbfgs.c'],
+                                include_dirs=include_dirs)]),
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
