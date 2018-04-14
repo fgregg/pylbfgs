@@ -3,6 +3,7 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.ccompiler import get_default_compiler
+import numpy
 
 try:
     from Cython.Build import cythonize
@@ -24,44 +25,17 @@ class custom_build_ext(build_ext):
             include_dirs.append('compat/win32')
 
 
-# from Michael Hoffman's http://www.ebi.ac.uk/~hoffman/software/sunflower/
-class NumpyExtension(Extension):
-
-    def __init__(self, *args, **kwargs):
-        Extension.__init__(self, *args, **kwargs)
-
-        self._include_dirs = self.include_dirs
-        del self.include_dirs  # restore overwritten property
-
-    # warning: Extension is a classic class so it's not really read-only
-
-    def get_include_dirs(self):
-        from numpy import get_include
-
-        return self._include_dirs + [get_include()]
-
-    def set_include_dirs(self, value):
-        self._include_dirs = value
-
-    def del_include_dirs(self):
-        pass
-
-    include_dirs = property(get_include_dirs,
-                            set_include_dirs,
-                            del_include_dirs)
-
-
-include_dirs = ['liblbfgs']
+include_dirs = ['liblbfgs'] + [numpy.get_include()]
 
 if use_cython:
     ext_modules = cythonize(
-        [NumpyExtension('lbfgs._lowlevel',
-                        ['lbfgs/_lowlevel.pyx', 'liblbfgs/lbfgs.c'],
-                        include_dirs=include_dirs)])
+        [Extension('lbfgs._lowlevel',
+                    ['lbfgs/_lowlevel.pyx', 'liblbfgs/lbfgs.c'],
+                    include_dirs=include_dirs)])
 else:
-    ext_modules = [NumpyExtension('lbfgs._lowlevel',
-                                  ['lbfgs/_lowlevel.c', 'liblbfgs/lbfgs.c'],
-                                  include_dirs=include_dirs)]
+    ext_modules = [Extension('lbfgs._lowlevel',
+                              ['lbfgs/_lowlevel.c', 'liblbfgs/lbfgs.c'],
+                              include_dirs=include_dirs)]
 
 setup(
     name="PyLBFGS",
