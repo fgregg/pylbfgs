@@ -4,7 +4,7 @@ LBFGS and OWL-QN optimization algorithms
 Python wrapper around liblbfgs.
 """
 
-from ._lowlevel import LBFGS, LBFGSError
+from ._lowlevel import LBFGS, errors
 
 
 def fmin_lbfgs(f, x0, progress=None, args=(), orthantwise_c=0,

@@ -8,6 +8,8 @@ cimport numpy as np
 import numpy as np
 import warnings
 
+from cpython.exc cimport PyErr_CheckSignals
+
 np.import_array()   # initialize Numpy
 
 ctypedef enum LineSearchAlgo :
@@ -66,7 +68,7 @@ cdef extern from "lbfgs.h":
                                      lbfgsfloatval_t, lbfgsfloatval_t,
                                      lbfgsfloatval_t, lbfgsfloatval_t,
                                      int, int, int)
- 
+
     ctypedef struct lbfgs_parameter_t:
         int m
         lbfgsfloatval_t epsilon
@@ -108,6 +110,10 @@ cdef class CallbackData(object):
 cdef lbfgsfloatval_t call_eval(void *cb_data_v,
                                lbfgsconst_p x, lbfgsfloatval_t *g,
                                int n, lbfgsfloatval_t step):
+
+    # Make sure stuff like CTRL+C is handled correctly
+    PyErr_CheckSignals()
+
     cdef object cb_data
     cdef np.npy_intp tshape[1]
 
@@ -126,12 +132,15 @@ cdef int call_progress(void *cb_data_v,
                        lbfgsfloatval_t fx,
                        lbfgsfloatval_t xnorm, lbfgsfloatval_t gnorm,
                        lbfgsfloatval_t step, int n, int k, int ls):
+    PyErr_CheckSignals()
     cdef object cb_data
     cdef np.npy_intp tshape[1]
 
     callback_data = <object>cb_data_v
     (f, progress_fn, shape, args) = callback_data
 
+    PyErr_CheckSignals()
+    
     if progress_fn:
         tshape[0] = <np.npy_intp>n
         x_array = np.PyArray_SimpleNewFromData(1, tshape, np.NPY_DOUBLE,
@@ -169,56 +178,90 @@ _LINE_SEARCH_ALGO = {
 
 
 _ERROR_MESSAGES = {
-    LBFGSERR_UNKNOWNERROR: "Unknown error." ,
-    LBFGSERR_LOGICERROR: "Logic error.",
-    LBFGSERR_OUTOFMEMORY: "Insufficient memory.",
-    LBFGSERR_CANCELED: "The minimization process has been canceled.",
-    LBFGSERR_INVALID_N: "Invalid number of variables specified.",
-    LBFGSERR_INVALID_N_SSE: "Invalid number of variables (for SSE) specified.",
-    LBFGSERR_INVALID_X_SSE: "The array x must be aligned to 16 (for SSE).",
-    LBFGSERR_INVALID_EPSILON: "Invalid parameter epsilon specified.",
-    LBFGSERR_INVALID_TESTPERIOD: "Invalid parameter past specified.",
-    LBFGSERR_INVALID_DELTA: "Invalid parameter delta specified.",
-    LBFGSERR_INVALID_LINESEARCH: "Invalid parameter linesearch specified.",
-    LBFGSERR_INVALID_MINSTEP: "Invalid parameter max_step specified.",
-    LBFGSERR_INVALID_MAXSTEP: "Invalid parameter max_step specified.",
-    LBFGSERR_INVALID_FTOL: "Invalid parameter ftol specified.",
-    LBFGSERR_INVALID_WOLFE: "Invalid parameter wolfe specified.",
-    LBFGSERR_INVALID_GTOL: "Invalid parameter gtol specified.",
-    LBFGSERR_INVALID_XTOL: "Invalid parameter xtol specified.",
+    LBFGSERR_UNKNOWNERROR: ["UnknownError", "Unknown error."] ,
+    LBFGSERR_LOGICERROR: ["LogicError", "Logic error."],
+    LBFGSERR_OUTOFMEMORY: ["OutOfMemory", "Insufficient memory."],
+    LBFGSERR_CANCELED:
+        ["Canceled", "The minimization process has been canceled."],
+    LBFGSERR_INVALID_N: ["InvalidN", "Invalid number of variables specified."],
+    LBFGSERR_INVALID_N_SSE:
+        ["InvalidNSSE", "Invalid number of variables (for SSE) specified."],
+    LBFGSERR_INVALID_X_SSE:
+        ["InvalidXSSE","The array x must be aligned to 16 (for SSE)."],
+    LBFGSERR_INVALID_EPSILON:
+        ["InvalidEpsilon", "Invalid parameter epsilon specified."],
+    LBFGSERR_INVALID_TESTPERIOD:
+        ["InvalidTestperiod", "Invalid parameter past specified."],
+    LBFGSERR_INVALID_DELTA:
+        ["InvalidDelta", "Invalid parameter delta specified."],
+    LBFGSERR_INVALID_LINESEARCH:
+        ["InvalidLinesearch", "Invalid parameter linesearch specified."],
+    LBFGSERR_INVALID_MINSTEP:
+        ["InvalidMinStep", "Invalid parameter max_step specified."],
+    LBFGSERR_INVALID_MAXSTEP:
+        ["InvalidMaxStep", "Invalid parameter max_step specified."],
+    LBFGSERR_INVALID_FTOL: ["InvalidFtol", "Invalid parameter ftol specified."],
+    LBFGSERR_INVALID_WOLFE:
+        ["InvalidWolfe", "Invalid parameter wolfe specified."],
+    LBFGSERR_INVALID_GTOL: ["InvalidGtol", "Invalid parameter gtol specified."],
+    LBFGSERR_INVALID_XTOL: ["InvalidXtol", "Invalid parameter xtol specified."],
     LBFGSERR_INVALID_MAXLINESEARCH:
-        "Invalid parameter max_linesearch specified.",
-    LBFGSERR_INVALID_ORTHANTWISE: "Invalid parameter orthantwise_c specified.",
+        ["InvalidMaxLinesearch", "Invalid parameter max_linesearch specified."],
+    LBFGSERR_INVALID_ORTHANTWISE:
+        ["InvalidOrthantwise", "Invalid parameter orthantwise_c specified."],
     LBFGSERR_INVALID_ORTHANTWISE_START:
-        "Invalid parameter orthantwise_start specified.",
+        ["InvalidOthantwiseStart",
+         "Invalid parameter orthantwise_start specified."],
     LBFGSERR_INVALID_ORTHANTWISE_END:
-        "Invalid parameter orthantwise_end specified.",
+        ["InvalidOrthantwiseEnd",
+         "Invalid parameter orthantwise_end specified."],
     LBFGSERR_OUTOFINTERVAL:
-        "The line-search step went out of the interval of uncertainty.",
+        ["OutOfInterval",
+         "The line-search step went out of the interval of uncertainty."],
     LBFGSERR_INCORRECT_TMINMAX:
-        "A logic error occurred;"
-        " alternatively, the interval of uncertainty became too small.",
+        ["IncorrectTMinMax", "A logic error occurred;"
+        " alternatively, the interval of uncertainty became too small."],
     LBFGSERR_ROUNDING_ERROR:
-        "A rounding error occurred;"
+        ["RoundingError", "A rounding error occurred;"
         " alternatively, no line-search step satisfies"
-        " the sufficient decrease and curvature conditions.",
-    LBFGSERR_MINIMUMSTEP: "The line-search step became smaller than min_step.",
-    LBFGSERR_MAXIMUMSTEP: "The line-search step became larger than max_step.",
+        " the sufficient decrease and curvature conditions."],
+    LBFGSERR_MINIMUMSTEP:
+        ["RoundingError", "The line-search step became smaller than min_step."],
+    LBFGSERR_MAXIMUMSTEP:
+        ["MaximumStep", "The line-search step became larger than max_step."],
     LBFGSERR_MAXIMUMLINESEARCH:
-        "The line-search routine reaches the maximum number of evaluations.",
+        ["MaximumLinesearch",
+         "The line-search routine reaches the maximum number of evaluations."],
     LBFGSERR_MAXIMUMITERATION:
-        "The algorithm routine reaches the maximum number of iterations.",
+        ["MaximumIteration",
+        "The algorithm routine reaches the maximum number of iterations."],
     LBFGSERR_WIDTHTOOSMALL:
-        "Relative width of the interval of uncertainty is at most xtol.",
+        ["WidthTooSmall",
+        "Relative width of the interval of uncertainty is at most xtol."],
     LBFGSERR_INVALIDPARAMETERS:
-        "A logic error (negative line-search step) occurred.",
+        ["InvalidParameters",
+         "A logic error (negative line-search step) occurred."],
     LBFGSERR_INCREASEGRADIENT:
-        "The current search direction increases the objective function value.",
+        ["IncreaseGradient",
+         "The current search direction increases the objective function value."],
 }
 
+class LBFGSErrors():
+    def raiseByCode(self, code):
+        #print "Tried rising an error", _ERROR_MESSAGES[code][0], _ERROR_MESSAGES[code][1]
+        if code in _ERROR_MESSAGES:
+            raise getattr(self, _ERROR_MESSAGES[code][0])(_ERROR_MESSAGES[code][1])
+        else:
+            raise self.LBFGSError('Error Code: ' + str(code))
 
-class LBFGSError(Exception):
-    pass
+errors = LBFGSErrors()
+errors.LBFGSError = type('LBFGSError', (Exception,), {})
+for errno, errdetails in _ERROR_MESSAGES.iteritems():
+    setattr(errors, errdetails[0], type(errdetails[0], (errors.LBFGSError,), {}))
+
+# TODO convert exception throwing
+#class LBFGSError(Exception):
+#    pass
 
 
 cdef class LBFGS(object):
@@ -343,7 +386,8 @@ cdef class LBFGS(object):
         def __set__(self, int val):
             self.params.orthantwise_end = val
 
-    def minimize(self, f, x0, progress=None, args=()):
+
+    def minimize(self, f, x0, progress=None, x_result=None, args=()):
         """Minimize a function using LBFGS or OWL-QN
 
         Parameters
@@ -363,6 +407,10 @@ cdef class LBFGS(object):
             this iteration and args (see below).
             If the return value from this callable is not 0 and not None,
             optimization is stopped and LBFGSError is raised.
+        x_result : array-like
+            If defined, a copy of the resulting x is written into this array.
+            This results in being able to access the result, even if some
+            error is triggered.
         args : sequence
             Arbitrary list of arguments, passed on to f and progress as *args.
         """
@@ -386,7 +434,7 @@ cdef class LBFGS(object):
 
         n_i = n
         if n_i != n:
-            raise LBFGSError("Array of %d elements too large to handle" % n)
+            raise errors.LBFGSError("Array of %d elements too large to handle" % n)
 
         x_a = aligned_copy(x0.ravel())
 
@@ -396,22 +444,28 @@ cdef class LBFGS(object):
                       call_progress, <void *>callback_data, &self.params)
 
             if r == LBFGS_SUCCESS or r == LBFGS_ALREADY_MINIMIZED:
-
+                if r == LBFGS_ALREADY_MINIMIZED:
+                    print "already minimized"
                 x_array = np.PyArray_SimpleNewFromData(1, tshape, np.NPY_DOUBLE,
                                                        <void *>x_a).copy()
+                if x_result is not None:
+                    x_result[:] = x_array.reshape(x0.shape)
 
                 return x_array.reshape(x0.shape)
-            elif r in (LBFGSERR_ROUNDING_ERROR, LBFGSERR_MAXIMUMLINESEARCH) :
-                warnings.warn(_ERROR_MESSAGES[r])
+            elif r in (LBFGSERR_ROUNDING_ERROR, LBFGSERR_MAXIMUMLINESEARCH,
+                       LBFGSERR_MAXIMUMITERATION) :
+
                 x_array = np.PyArray_SimpleNewFromData(1, tshape, np.NPY_DOUBLE,
                                                        <void *>x_a).copy()
+                if x_result is not None:
+                    x_result[:] = x_array.reshape(x0.shape)
 
+                errors.raiseByCode(r)
                 return x_array.reshape(x0.shape)
             elif r == LBFGSERR_OUTOFMEMORY:
                 raise MemoryError
             else:
-                raise LBFGSError(_ERROR_MESSAGES[r])
+                errors.raiseByCode(r)
 
         finally:
             lbfgs_free(x_a)
-
