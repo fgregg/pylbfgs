@@ -3,3 +3,5 @@ graft liblbfgs
 include README.rst
 include pyproject.toml
 include lbfgs/_lowlevel.pyx
+include LICENSE
+include liblbfgs/COPYING
