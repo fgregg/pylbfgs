@@ -41,7 +41,7 @@ def readme():
 setup(
     name="PyLBFGS",
     url='https://github.com/dedupeio/pylbfgs',
-    version="0.2.0.15",
+    version="0.2.0.16",
     description="LBFGS and OWL-QN optimization algorithms",
     author="Lars Buitinck, Forest Gregg",
     author_email="fgregg@gmail.com",
