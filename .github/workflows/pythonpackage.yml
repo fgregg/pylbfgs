@@ -25,22 +25,6 @@ jobs:
       run: |        
         pip install -r requirements.txt
         pytest tests
-    - name: Coveralls
-      env:
-        COVERALLS_PARALLEL: true
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        pip install https://github.com/bboe/coveralls-python/archive/github_actions.zip
-        coveralls
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@57daa114ba54fd8e1c8563e8027325c0bf2f5e80
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
   wheels:
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')  
     needs: test
